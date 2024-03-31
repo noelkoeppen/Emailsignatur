@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signaturen-Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Signaturen-Generator</h2>
+    <form id="signatureForm">
+        <div class="mb-3">
+            <label for="firstName" class="form-label">Vorname</label>
+            <input type="text" class="form-control" id="firstName" placeholder="Vorname">
+        </div>
+        <div class="mb-3">
+            <label for="lastName" class="form-label">Nachname</label>
+            <input type="text" class="form-control" id="lastName" placeholder="Nachname">
+        </div>
+        <div class="mb-3">
+            <label for="title" class="form-label">Titel</label>
+            <input type="text" class="form-control" id="title" placeholder="Ihr Titel">
+        </div>
+        <div class="mb-3">
+            <label for="email" class="form-label">E-Mail</label>
+            <input type="email" class="form-control" id="email" placeholder="Ihre E-Mail-Adresse">
+        </div>
+        <div class="mb-3">
+            <label for="telno" class="form-label">Telefonnummer</label>
+            <input type="tel" class="form-control" id="telno" placeholder="+49 (30) 89560861">
+        </div>
+    </form>
+    <button class="btn btn-primary" id="copyHtml">HTML kopieren</button>
+    <h3>Vorschau</h3>
+    <div id="preview"></div>
+    <h3>HTML-Code</h3>
+    <textarea id="htmlOutput" class="form-control" rows="10" readonly></textarea>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    function updateSignature() {
+        var firstName = $('#firstName').val();
+        var lastName = $('#lastName').val();
+        var title = $('#title').val();
+        var email = $('#email').val();
+        var telno = $('#telno').val();
+
+        var signatureHTML = `
+                <table cellpadding="0" cellspacing="0" style="vertical-align: -webkit-baseline-middle; font-size: medium; font-family: Arial;border:none;">
+  <tbody>
+	  <tr>
+      <td><table cellpadding="0" cellspacing="0"  style="width: 100%; vertical-align: -webkit-baseline-middle; font-size: medium; font-family: Arial;">
+          <tbody>
+            <tr>
+              <td height="20"></td>
+            </tr>
+          </tbody>
+        </table></td>
+    </tr>
+    <tr>
+      <td><table cellpadding="0" cellspacing="0" style="vertical-align: -webkit-baseline-middle; font-size: medium; font-family: Arial;">
+          <tbody>
+            <tr>
+              <td style="vertical-align: middle;"><h2 color="#000000" style="margin: 0px; font-size: 18px; color: rgb(0, 0, 0); font-weight: 600;"><span>${firstName}</span><span>&nbsp;</span><span>${lastName}</span></h2>
+                <p color="#000000" font-size="medium"  style="margin: 0px; color: rgb(0, 0, 0); font-size: 14px; line-height: 22px;"><span>${title}</span></p></td>
+              <td width="30"><div style="width: 20px;"></div></td>
+              <td color="#f2547d" direction="vertical" width="1" height="auto"  style="width: 1px; border-bottom: none; border-left: 1px solid rgb(243, 146, 0);"></td>
+              <td width="30"><div style="width: 20px;"></div></td>
+              <td style="vertical-align: middle;"><table cellpadding="0" cellspacing="0"  style="vertical-align: -webkit-baseline-middle; font-size: medium; font-family: Arial;">
+                  <tbody>
+                    <tr height="25" style="vertical-align: middle;">
+                      <td width="30" style="vertical-align: middle;"><table cellpadding="0" cellspacing="0"  style="vertical-align: -webkit-baseline-middle; font-size: medium; font-family: Arial;">
+                          <tbody>
+                            <tr>
+                              <td style="vertical-align: bottom;">
+								  <span width="11" style="display: inline-block;">
+									  <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAACXBIWXMAAABqAAAAagHcGLm1AAACuElEQVRIiWL8//8/A90BAwMDAAAA//9iGhBbGRgYAAAAAP//GhiLGRgYAAAAAP//YsEl8XkSowADA4MBlHuBN+//B6rZysDAAAAAAP//whrHnycxgiw8wMDAwA8VesjAwBDAm/f/AlVsZWBgAAAAAP//wrAYi6UwcJGBgcGBKj5nYGAAAAAA//9CiePPkxgVcFgKAvoMDAwTqGEpAwMDAwAAAP//Qk9cCTgshYH4z5MYHSi2lYGBAQAAAP//Qre4gAg9lFvMwMAAAAAA//8amOzEwMAAAAAA//9Ct5hQqv3IwMCwgGJbGRgYAAAAAP//QrcYlLDwgQTevP8PKLaVgYEBAAAA//9Ct3gDNQwlCBgYGAAAAAD//0KxGFpAHMSjkZjERxgwMDAAAAAA///Clrga8Oi0/zyJEZTlKAMMDAwAAAAA///CVWSC4toej+mGFBWfDAwMAAAAAP//wpWdQL4CpWBc4AC0aCUPMDAwAAAAAP//wtkQ+DyJERSf/QRMTuTN+w/PXtAaDRRVIEeBQmQC1lzAwMAAAAAA///C2wL5PIkRZGg8ActBiRFUhoMsAuUKUJmODBqhDkBULgwMDAAAAAD//yLY9Pk8iRFkILphpAJQtIFqNki6YGBgAAAAAP//IqbIBJXNoCqREgCqeBAlHgMDAwAAAP//ImgxNIhAluPL38QARKgxMDAAAAAA//8iqpIAWc6b9x9k+UQKLAa1YiCAgYEBAAAA//8iqXbizfsPSumBBLIaLoAoeBgYGAAAAAD//yK5WuTN+w9KuaCWCii1EuMAkBpQgYOogBgYGAAAAAD//6KoQQ/NtwFQ32Ar6bA3EhkYGAAAAAD//6JqTwK9WYTuSzhgYGAAAAAA//8amC4MAwMDAAAA//8amKYPAwMDAAAA//8aGIsZGBgAAAAA//8DAJpthJWQ8RHIAAAAAElFTkSuQmCC" width="16" style="display: block;">
+								  </span>
+								</td>
+                            </tr>
+                          </tbody>
+                        </table></td>
+                      <td style="padding: 0px; color: rgb(0, 0, 0);"><a href="tel:${telno}" color="#000000" style="text-decoration: none; color: rgb(0, 0, 0); font-size: 12px;"><span>${telno}</span></a></td>
+                    </tr>
+                    <tr height="25" style="vertical-align: middle;">
+                      <td width="30" style="vertical-align: middle;"><table cellpadding="0" cellspacing="0" style="vertical-align: -webkit-baseline-middle; font-size: medium; font-family: Arial;">
+                          <tbody>
+                            <tr>
+                              <td style="vertical-align: bottom;">
+								  <span width="11" style="display: inline-block;">
+									  <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAACXBIWXMAAABqAAAAagHcGLm1AAAC0UlEQVRIiWL8//8/A90BAwMDAAAA//9iGhBbGRgYAAAAAP//GhiLGRgYAAAAAP//GhiLGRgYAAAAAP//GhiLGRgYAAAAAP//GhiLGRgYAAAAAP//YkHmfJ7EaMDAwHCAgYGBn8r2fGRgYHDgzft/AcxjYGAAAAAA//9C9/EEGlgKAiAzQWZDAAMDAwAAAP//GpigZmBgAAAAAP//Qre4ABos1AYgM0FmQwADAwMAAAD//0KxGBoHCgwMDBepaDPILAXk+GVgYGAAAAAA//9CsfjzJMYNUIsdGBgYNlLBUpAZILMUoGZDAAMDAwAAAP//Qg9qAWiqBqXAAAYGhoUUWLoQagbIYpCZILMhgIGBAQAAAP//wpa4QClw/edJjCDLExgYGBLJsDQRpBdkBsgsjJzCwMAAAAAA///Clao38ub9P/B5EqMAb97/BVDLiUl0IDUgSxdA9YJ8ihllDAwMAAAAAP//QqkWP09ihAUJyKUgAOKDEgUoRYLiHl/hAi4kGBgYHkDzLKgwQjbnA2/efwifgYEBAAAA//9C9zHIEmTF+gwMDPFQNshAkGHYUjxIDCQHUgNSC9ID0gtigwDITESqZmBgAAAAAP//wmgIgIIIyVJk8JCBgQGUWECGg1KoPVTyIFQcFCIgcXksjgKllw9wEQYGBgAAAAD//0LPTrgsBQGQgSA5A2iQOYIwlA0r49EtBQGwz6FmQwADAwMAAAD//0IPalBCwmYpDIDid//nSYwgdSAffICy9xMo40FmgtRBAAMDAwAAAP//Qqmd0PMaHgCKQxAmBSDMZmBgAAAAAP//GphKgoGBAQAAAP//GhiLGRgYAAAAAP//GpjaiYGBAQAAAP//Gph2NQMDAwAAAP//GpigZmBgAAAAAP//GhiLGRgYAAAAAP//GhiLGRgYAAAAAP//GhiLGRgYAAAAAP//GhiLGRgYAAAAAP//AwAGY3ylWOJ7kwAAAABJRU5ErkJggg==" width="16" style="display: block;">
+								  </span>
+								</td>
+                            </tr>
+                          </tbody>
+                        </table></td>
+                      <td style="padding: 0px;"><a href="mailto:${email}" color="#000000"  style="text-decoration: none; color: rgb(0, 0, 0); font-size: 12px;"><span>${email}</span></a></td>
+                    </tr>
+                    <tr height="25" style="vertical-align: middle;">
+                      <td width="30" style="vertical-align: middle;"><table cellpadding="0" cellspacing="0"  style="vertical-align: -webkit-baseline-middle; font-size: medium; font-family: Arial;">
+                          <tbody>
+                            <tr>
+                              <td style="vertical-align: bottom;">
+								  <span width="11" style="display: inline-block;">
+									  <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAACXBIWXMAAABqAAAAagHcGLm1AAACVElEQVRIiWL8//8/A90BAwMDAAAA//9iGhBbGRgYAAAAAP//GhiLGRgYAAAAAP//Itriz5MYF3yexPjh8yRGA4ptZWBgAAAAAP//IsXH8QwMDPwMDAwHKLacgYEBAAAA//8iJ6gpt5yBgQEAAAD//yI3jimznIGBAQAAAP//oiRxkW85AwMDAAAA//+iNFWTZzkDAwMAAAD//6JGdiLdcgYGBgAAAAD//6JWPibNcgYGBgAAAAD//6JmAQKyHJTXBQiqZGBgAAAAAP//onbJpQ/1OX7LGRgYAAAAAP//okWRSdhyBgYGAAAAAP//olVZjd9yBgYGAAAAAP//omUlAbK8AasMAwMDAAAA//9iIcYEIhPMRQYGhg9IfHsGBoYNWFUyMDAAAAAA//8iymIGBgZisskG3rz/OH2IAhgYGAAAAAD//yI3qD8yMDAkookVEK2bgYEBAAAA//8i1+IE3rz/C6DBCwP8nycxJhClm4GBAQAAAP//ItZi5LhL5M37D4u7CWjqiPM1AwMDAAAA//8iurH3eRKjAgMDgwJv3v8DSGKgRPcAWmrBgCOyGqyAgYEBAAAA//+iuJUJahJBWycwsJA37z/+IGdgYAAAAAD//6JGPkYP7nho6OAGDAwMAAAAAP//othi3rz/F9ASGQjg9zEDAwMAAAD//6JWyUVaImNgYAAAAAD//6KWxaBUDsrbyHzcgIGBAQAAAP//oloX5vMkRgcGBgYQBpVgoODHDRgYGAAAAAD//xqYvhMDAwMAAAD//xqYLgwDAwMAAAD//wMAw/5hAmL5TcoAAAAASUVORK5CYII=" width="16" style="display: block;">
+								  </span>
+								</td>
+                            </tr>
+                          </tbody>
+                        </table></td>
+                      <td style="padding: 0px;"><a href="//www.tanmar.de" color="#000000" style="text-decoration: none; color: rgb(0, 0, 0); font-size: 12px;"><span>www.tanmar.de</span></a></td>
+                    </tr>
+                    <tr height="25" style="vertical-align: middle;">
+                      <td width="30" style="vertical-align: middle;"><table cellpadding="0" cellspacing="0" style="vertical-align: -webkit-baseline-middle; font-size: medium; font-family: Arial;">
+                          <tbody>
+                            <tr>
+                             <td style="vertical-align: bottom;">
+								  <span width="11" style="display: inline-block;">
+									  <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAACXBIWXMAAABqAAAAagHcGLm1AAAC0klEQVRIiWL8//8/A90BAwMDAAAA//9iGhBbGRgYAAAAAP//YiFVw+dJjAEMDAwGDAwMDlChAwwMDBd48/5vINoQBgYGAAAAAP//IjqoP09ibGBgYChgYGDgx6HkIwMDwwTevP8gdfgBAwMDAAAA//8iaPHnSYwCDAwMIN/YE+mZgwwMDAG8ef8/4FTBwMAAAAAA//8iJo5JsRQEQGrxBzsDAwMAAAD//8Jr8edJjKCgJcVSuOVQvdgBAwMDAAAA//8i5GN88fUQGq+k62VgYAAAAAD//8JpMTT1YktIIMscefP+K/Dm/QfFvyMOB/BDzcAEDAwMAAAAAP//wudjUJbBBkAJB5SFwADKxmUBdjMYGBgAAAAA//8i2WJkS9HEsPkau8UMDAwAAAAA///CZzG27IAvTrFFC/YsxcDAAAAAAP//wmfxA2yGY4u3z5MYE0gwg4GBgYEBAAAA///CZzFGkELBAmSLoOwJONRiz88MDAwAAAAA///CW3J9nsQICipcRSQh8BCU8rEqYmBgAAAAAP//IpSPF5BpKQjgLr0YGBgAAAAA//8iZDGuICQG4NbLwMAAAAAA///CazFv3n9Q4thIhqUboXqxAwYGBgAAAAD//yKmkiDH1/j1MDAwAAAAAP//ImgxtHAAVXXEgoPYChkUwMDAAAAAAP//IrbpQ1TlDgV4ayUwYGBgAAAAAP//IspiqA8WEqF0IW/e/wsEVTEwMAAAAAD//yKlsQfyNb4iEyRHXMgwMDAAAAAA//8i2mJoKsWXaBoIpWQ4YGBgAAAAAP//Irld/XkSIygo9dGEL/Lm/cdZE2EABgYGAAAAAP//IqddDSqbkYMcxMZVSWAHDAwMAAAAAP//ItliaOJBTrkFxCYoOGBgYAAAAAD//yK7CwOroXjz/pNenjMwMAAAAAD//xqYvhMDAwMAAAD//xqYvhMDAwMAAAD//wMAduyIrQ3/pIUAAAAASUVORK5CYII=" width="16" style="display: block;">
+								  </span>
+								</td>
+                            </tr>
+                          </tbody>
+                        </table></td>
+                      <td style="padding: 0px;"><span color="#000000" style="font-size: 12px; color: rgb(0, 0, 0);"><span>Tanmar Webentwicklung, Kottbusser Damm 7, 10967 Berlin</span></span></td>
+                    </tr>
+                  </tbody>
+                </table></td>
+            </tr>
+          </tbody>
+        </table></td>
+    </tr>
+    <tr>
+      <td><table cellpadding="0" cellspacing="0"  style="width: 100%; vertical-align: -webkit-baseline-middle; font-size: medium; font-family: Arial;">
+          <tbody>
+            <tr>
+              <td height="20"></td>
+            </tr>
+            <tr>
+              <td color="#f2547d" direction="horizontal" width="auto" height="1" style="width: 100%; border-bottom: 1px solid rgb(243, 146, 0); border-left: none; display: block;"></td>
+            </tr>
+            <tr>
+              <td height="20"></td>
+            </tr>
+          </tbody>
+        </table></td>
+    </tr>
+    <tr>
+      <td><table cellpadding="0" cellspacing="0"  style="width: 100%; vertical-align: -webkit-baseline-middle; font-size: medium; font-family: Arial;">
+          <tbody>
+            <tr>
+              <td style="vertical-align: top;"></td>
+              <td style="text-align: right; vertical-align: top;"><table cellpadding="0" cellspacing="0"  style="display: inline-block; vertical-align: -webkit-baseline-middle; font-size: medium; font-family: Arial;">
+                  <tbody>
+                    <tr style="text-align: right;">
+                     <td style="vertical-align: bottom;"><span width="110"  style="display: inline-block;"><img src="data:image/png;base64,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" width="120" style="display: block;"></span></td>
+                    </tr>
+                  </tbody>
+                </table></td>
+            </tr>
+          </tbody>
+        </table></td>
+    </tr>
+
+
+  </tbody>
+</table>
+        `;
+
+        $('#preview').html(signatureHTML);
+        $('#htmlOutput').val(signatureHTML);
+    }
+
+function copyToClipboard(element) {
+    var $temp = $("<textarea>");
+    $("body").append($temp);
+    $temp.val($(element).val()).select();
+    try {
+        var successful = document.execCommand("copy");
+        var msg = successful ? "erfolgreich" : "fehlgeschlagen";
+        console.log("Kopieren war " + msg);
+        alert("HTML-Code kopiert!");
+    } catch (err) {
+        console.error("Fehler beim Kopieren", err);
+        alert("Fehler beim Kopieren. Bitte manuell kopieren.");
+    }
+    $temp.remove();
+}
+
+$('#copyHtml').click(function() {
+    copyToClipboard($('#htmlOutput'));
+});
+
+
+
+    $('#copyHtml').click(function() {
+        copyToClipboard($('#htmlOutput'));
+        alert("HTML-Code kopiert!");
+    });
+
+    // Aktualisieren Sie die Signatur bei jeder Änderung der Eingabe
+    $('#signatureForm input').on('input', updateSignature);
+
+    // Initialer Aufruf zum Füllen der Vorschau beim Laden der Seite
+    updateSignature();
+});
+</script>
+</body>
+</html>
